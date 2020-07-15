@@ -7,10 +7,16 @@
 #include <net/if.h>
 #include <string.h>
 
+#define CONF_PATH "./arpPacket.conf"
+
 #define ARP_PROTOTYPE 0x0800    // ARP 헤더의 프로토콜 타입
 #define ARP_HWTYPE 0x0001   // 하드웨어 주소 타입
 #define ARP_REQUEST 0x0001  // ARP Request
 #define ARP_REPLY 0x0002    // ARP Reply
+
+#define RETURN_ERROR_0		0
+#define RETURN_SUCCESS_1	1
+
 
 #define INVALID_SOCKET  (-1)
 #define SOCKET_ERROR    (-1)
@@ -46,7 +52,7 @@ struct t_SendARP
 		CLEAR_MAC(ether_dst);
 		CLEAR_MAC(ether_src);
 
-		arp_opcode= 0;
+		arp_opcode = 0;
 		CLEAR_MAC(arp_src_mac);
 		arp_src_ip.s_addr = 0;
 		CLEAR_MAC(arp_dst_mac);
@@ -73,12 +79,15 @@ private:
 	int 					iSdForRedirectionARP;             			// 소켓 디스크립터
 	struct ifreq     		ifr;                 						// iSdForRedirectionARP 관련 변수
 	struct sockaddr_ll     	sll;    	       							// iSdForRedirectionARP 관련 변수
-	char 					sAdaptorName[MAX_VLAN_ADAPTER_NAME + 1];
+	char 					strAdaptorName[MAX_VLAN_ADAPTER_NAME + 1];
+	struct t_SendARP		tArpPacket;									// ARP 패킷 정보
+	unsigned int			uiSendCount;								// 패킷 횟수 : -1은 무한대
 
 public:
 	CarpManager();
 	~CarpManager();
 	
-	int initSocket();
+	int 	initSocket();
+	bool 	readSettingFile(const char* path = CONF_PATH);
 
 };
