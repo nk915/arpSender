@@ -15,11 +15,21 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+	if(SOCKET_ERROR == cArpManager.initSocket()) {
+		printf("initSocket ERROR \n");
+		return 0;
+	}
+
+
+	if(cArpManager.sendPacket()) {
+		printf("Success sendARP \n");
+	}
+	else {
+		printf("Fail sendARP \n");
+	}
 
 
 
-
-// CarpManager arp;
 	return 0;
 }
 
@@ -34,15 +44,16 @@ bool initSettingFile(const char* path)
 		return false;
 	}
 
-	fputs("ADAPTOR_NAME    eth0 \n", fp);
-	fputs("SRC_ETH         11:22:33:44:55:66 \n", fp);
+	fputs("ADAPTOR_NAME    eth0\n", fp);
 	fputs("DST_ETH         ff:ff:ff:ff:ff:ff \n", fp);
-	fputs("OP_CODE         1                           # 1:request / 2:reply \n", fp);
+	fputs("SRC_ETH         11:22:33:44:55:66 \n", fp);
+	fputs("OP_CODE         1\n", fp);
 	fputs("ARP_SRC_MAC     11:22:33:44:55:66 \n", fp);
 	fputs("ARP_SRC_IP      192.168.100.100   \n", fp);
 	fputs("ARP_DST_MAC     00:00:00:00:00:00 \n", fp);
 	fputs("ARP_DST_IP      192.168.100.200   \n", fp);
 
+	fflush(fp);
 	fclose(fp);
 	return true;
 }
