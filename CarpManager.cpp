@@ -2,7 +2,7 @@
 
 CarpManager::CarpManager() 
 {
-	printf("CarpManager Start \n");
+	// printf("CarpManager Start \n");
 	iSdForRedirectionARP = INVALID_SOCKET;
 	tArpPacket.clear();
 }
@@ -10,7 +10,7 @@ CarpManager::CarpManager()
 
 CarpManager::~CarpManager() 
 {
-	printf("CarpManager End \n");
+	// printf("CarpManager End \n");
 }
 
 
@@ -44,10 +44,11 @@ int CarpManager::initSocket()
 
 bool CarpManager::readSettingFile(const char* path) 
 {
-	printf("readSettingFile start \n");
-	char strType[1000]={0,};
-	char strIP[50]={0,};
-	int	usOpcode=0;
+	// printf("readSettingFile start \n");
+	char 	strType[1000]={0,};
+	char 	strIP[50]={0,};
+	int		usOpcode=0;
+	u_char  ucEth[HW_ADDR_LEN]={0,};   // MAC 임시
 	
 	FILE* fp;
 	if ((fp = fopen(path, "r")) == NULL) {
@@ -58,103 +59,93 @@ bool CarpManager::readSettingFile(const char* path)
 
 	fscanf(fp, "%s %s", strType, strAdaptorName);
 	if(0 != strncmp("ADAPTOR_NAME", strType, strlen("ADAPTOR_NAME"))) {
-		printf("read Error ADAPTOR_NAME Type : %s \n ", strType);
-		return false;
+		goto __return_error; 
 	}
 
-	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x"
-			, strType
-			, &tArpPacket.ether_dst[0], &tArpPacket.ether_dst[1], &tArpPacket.ether_dst[2], &tArpPacket.ether_dst[3], &tArpPacket.ether_dst[4], &tArpPacket.ether_dst[5]);
-	if(0 != strncmp("DST_ETH", strType, strlen("DST_ETH"))) {
-		printf("read Error DST_ETH Type : %s \n ", strType);
-		return false;
-	}
-
-	
-	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x"
-			, strType
-			, &tArpPacket.ether_src[0], &tArpPacket.ether_src[1], &tArpPacket.ether_src[2], &tArpPacket.ether_src[3], &tArpPacket.ether_src[4], &tArpPacket.ether_src[5]);
+	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x", strType, &ucEth[0], &ucEth[1], &ucEth[2], &ucEth[3], &ucEth[4], &ucEth[5]);
 	if(0 != strncmp("SRC_ETH", strType, strlen("SRC_ETH"))) {
-		printf("read Error SRC_ETH Type : %s \n ", strType);
-		return false;
+		goto __return_error; 
 	}
-	
+	memcpy(tArpPacket.ether_src, ucEth, sizeof(ucEth));
+
+
+	memset(ucEth, 0, sizeof(ucEth));
+	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x", strType, &ucEth[0], &ucEth[1], &ucEth[2], &ucEth[3], &ucEth[4], &ucEth[5]);
+	if(0 != strncmp("DST_ETH", strType, strlen("DST_ETH"))) {
+		goto __return_error; 
+	}
+	memcpy(tArpPacket.ether_dst, ucEth, sizeof(ucEth));
+
 
 	fscanf(fp, "%s %d", strType, &usOpcode);
 	if(0 != strncmp("OP_CODE", strType, strlen("OP_CODE"))) {
-		printf("read Error OP_CODE Type : %s \n ", strType);
-		return false;
+		goto __return_error; 
 	}
 	tArpPacket.arp_opcode = htons(usOpcode);
 
-	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x"
-			, strType
-			, &tArpPacket.arp_src_mac[0], &tArpPacket.arp_src_mac[1], &tArpPacket.arp_src_mac[2], &tArpPacket.arp_src_mac[3], &tArpPacket.arp_src_mac[4], &tArpPacket.arp_src_mac[5]);
+
+	memset(ucEth, 0, sizeof(ucEth));
+	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x", strType, &ucEth[0], &ucEth[1], &ucEth[2], &ucEth[3], &ucEth[4], &ucEth[5]);
 	if(0 != strncmp("ARP_SRC_MAC", strType, strlen("ARP_SRC_MAC"))) {
-		printf("read Error ARP_SRC_MAC Type : %s \n ", strType);
-		return false;
+		goto __return_error; 
 	}
+	memcpy(tArpPacket.arp_src_mac, ucEth, sizeof(ucEth));
 
 
 	fscanf(fp, "%s %s", strType, strIP);
 	if(0 != strncmp("ARP_SRC_IP", strType, strlen("ARP_SRC_IP"))) {
-		printf("read Error ARP_SRC_IP : %s \n ", strType, strIP);
-		return false;
+		goto __return_error; 
 	}
 	tArpPacket.arp_src_ip.s_addr = inet_addr(strIP);
 
-
-	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x"
-			, strType
-			, &tArpPacket.arp_dst_mac[0], &tArpPacket.arp_dst_mac[1], &tArpPacket.arp_dst_mac[2], &tArpPacket.arp_dst_mac[3], &tArpPacket.arp_dst_mac[4], &tArpPacket.arp_dst_mac[5]);
+	memset(ucEth, 0, sizeof(ucEth));
+	fscanf(fp, "%s %02x:%02x:%02x:%02x:%02x:%02x", strType, &ucEth[0], &ucEth[1], &ucEth[2], &ucEth[3], &ucEth[4], &ucEth[5]);
 	if(0 != strncmp("ARP_DST_MAC", strType, strlen("ARP_DST_MAC"))) {
-		printf("read Error ARP_DST_MAC Type : %s \n ", strType);
-		return false;
+		goto __return_error; 
 	}
+	memcpy(tArpPacket.arp_dst_mac, ucEth, sizeof(ucEth));
 
 	fscanf(fp, "%s %s", strType, strIP);
-	if(0 != strncmp("ARP_DST_IP", strType, strlen("ARP_DST_IP"))) {
-		printf("read Error ARP_DST_IP : %s \n ", strType, strIP);
-		return false;
+	if(0 != strncmp("ARP_DST_IP", strType, strlen("ARP_DST_IP"))) { 
+		goto __return_error; 
 	}
 	tArpPacket.arp_dst_ip.s_addr = inet_addr(strIP);
 
-	//printf("AdaptorName: %s\n", strAdaptorName);
-	//tArpPacket.print();
 
 	fclose(fp);
 	return true;
+
+__return_error:
+	printf("read Error %s \n", strType);
+	fclose(fp);
+	return false;
 }
 
 
-
-
-
-bool CarpManager::sendPacket() 
+// 패킷 횟수 : -1은 무한대
+bool CarpManager::sendPacket(unsigned long long _ull_packet_cnt) 
 {
-	int ret = 0;
-
+	unsigned long long ullSendCnt = 0;
 	if(iSdForRedirectionARP == INVALID_SOCKET) {
 		printf("sendPacket(): Error INVALID_SOCKET \n");
 		return false;
 	}
 
-	if( (ret = sendto(iSdForRedirectionARP, &tArpPacket, sizeof(tArpPacket), 0, (struct sockaddr *)&sll, sizeof(sll)) ) < 0) {
-		printf("[%s] sendto error: %s, %s:%d\n", strAdaptorName, strerror(errno));
-		sleep(0);
-		return false;
-	}
-
-	printf("sendto : ARP\n");
+	printf("         --- Packet count : %u (zero is infinite)", _ull_packet_cnt);
 	tArpPacket.print();
+
+	while(ullSendCnt < _ull_packet_cnt || _ull_packet_cnt == 0) {
+		if( (sendto(iSdForRedirectionARP, &tArpPacket, sizeof(tArpPacket), 0, (struct sockaddr *)&sll, sizeof(sll)) ) < 0) {
+			printf("[%s] sendto error: %s, %s:%d\n", strAdaptorName, strerror(errno));
+			return false;
+		}
+
+		ullSendCnt++;
+		sleep(0);
+	}
 
 	return true;	
 }
-
-
-
-
-
 
 
 

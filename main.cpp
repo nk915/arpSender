@@ -1,5 +1,6 @@
 #include "CarpManager.h"
 
+
 bool initSettingFile(const char* path); 
 
 int main(int argc, char* argv[]) 
@@ -21,13 +22,14 @@ int main(int argc, char* argv[])
 	}
 
 
-	if(cArpManager.sendPacket()) {
-		printf("Success sendARP \n");
+	printf("sendto : ARP  (version 1.0)\n");
+	if(argc == 2) {
+		unsigned long long ullPacketCount =	strtoull(argv[1], NULL, 0);
+		cArpManager.sendPacket(ullPacketCount);
 	}
 	else {
-		printf("Fail sendARP \n");
+		cArpManager.sendPacket();
 	}
-
 
 
 	return 0;
@@ -45,8 +47,8 @@ bool initSettingFile(const char* path)
 	}
 
 	fputs("ADAPTOR_NAME    eth0\n", fp);
-	fputs("DST_ETH         ff:ff:ff:ff:ff:ff \n", fp);
 	fputs("SRC_ETH         11:22:33:44:55:66 \n", fp);
+	fputs("DST_ETH         ff:ff:ff:ff:ff:ff \n", fp);
 	fputs("OP_CODE         1\n", fp);
 	fputs("ARP_SRC_MAC     11:22:33:44:55:66 \n", fp);
 	fputs("ARP_SRC_IP      192.168.100.100   \n", fp);

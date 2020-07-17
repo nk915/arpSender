@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-g -Wall
 OBJS=CarpManager.o main.o
-TARGET=arpManager
+TARGET=arpSender
 
 all: $(TARGET)
 

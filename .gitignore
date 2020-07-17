@@ -1,5 +1,5 @@
 
 # 오브젝트 제외
 *.o
-arpManager*
+arpSender*
 arpPacket.conf
